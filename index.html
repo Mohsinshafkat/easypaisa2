@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>easypaisa Transfer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; min-height: 100vh;
+    background-color: #f4f6f5;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #2e2a36;
+  }
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border: 1px solid #d8deda;
+    border-radius: 8px;
+    background: transparent;
+    display: grid; place-items: center;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .help-btn {
+    padding: 6px 16px;
+    border: 1px solid #d8deda;
+    border-radius: 20px;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 10px 0 20px 0;
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 24px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding-bottom: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #7a7a7a;
+    cursor: pointer;
+    position: relative;
+  }
+  .tab.active {
+    color: #1a1a1a;
+  }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; width: 100%;
+    height: 3px;
+    background-color: #128c44;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2e2a36;
+  }
+  .see-all {
+    font-size: 14px;
+    font-weight: 700;
+    color: #128c44;
+    cursor: pointer;
+  }
+  .favourites-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 24px;
+  }
+  .fav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+  }
+  .fav-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 1px solid #d8deda;
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #2e2a36;
+    background: #fff;
+    margin-bottom: 6px;
+  }
+  .fav-name {
+    font-size: 11px;
+    text-align: center;
+    color: #555;
+    line-height: 1.2;
+    max-width: 64px;
+  }
+  .type-toggle {
+    display: flex;
+    background: #f0f2f1;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: #555;
+  }
+  .toggle-btn.active {
+    background: #cbf2dc;
+    color: #128c44;
+  }
+  .input-box {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #d8deda;
+    border-radius: 30px;
+    padding: 14px 18px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .input-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+    background: transparent;
+  }
+
+  .bank-dropdown-container {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .bank-list-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; width: 100%;
+    max-height: 240px;
+    background: #ffffff;
+    border: 1.5px solid #d8deda;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .bank-list-dropdown.show {
+    display: block;
+  }
+  .bank-search-box {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+  }
+  .bank-search-box input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d8deda;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+  }
+  .bank-items {
+    padding: 4px 0;
+  }
+  .bank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .bank-item:hover {
+    background: #f0f2f1;
+  }
+  .bank-item img {
+    display: none;
+  }
+
+  .next-form-btn {
+    margin-top: auto;
+    width: 100%;
+    height: 52px;
+    background-color: #128c44;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="top-bar">
+    <button class="back-btn">&lt;</button>
+    <button class="help-btn">Help</button>
+  </div>
+
+  <h1>easypaisa Transfer</h1>
+
+  <div class="tabs">
+    <div class="tab active">Send Money</div>
+    <div class="tab">History</div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">My Easypaisa Favourites</span>
+    <span class="see-all">See All</span>
+  </div>
+
+  <div class="favourites-scroll">
+    <div class="fav-item"><div class="fav-avatar">DK</div><span class="fav-name">Dr Kashif</span></div>
+    <div class="fav-item"><div class="fav-avatar">UQ</div><span class="fav-name">Umar Qayum</span></div>
+    <div class="fav-item"><div class="fav-avatar">MM</div><span class="fav-name">Muzzamil</span></div>
+    <div class="fav-item"><div class="fav-avatar">MS</div><span class="fav-name">MUHAMMAD</span></div>
+  </div>
+
+  <div class="type-toggle">
+    <button class="toggle-btn active" type="button">Mobile No.</button>
+    <button class="toggle-btn" type="button">Digital Account No.</button>
+  </div>
+
+  <form id="transferForm" onsubmit="goToAmountPage(event)">
+    <div class="input-box">
+      <svg width="20" height="20" fill="none" stroke="#555" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="receiverName" placeholder="Enter Receiver Name" required>
+    </div>
+<div class="input-box">
+  <input type="text" id="receiverAccount" inputmode="numeric" pattern="[0-9]*" placeholder="Enter Receiver Account Number" required>
+</div>
+
+    <div class="bank-dropdown-container" id="bankDropdownContainer">
+      <div class="input-box" onclick="toggleBankDropdown()" style="cursor: pointer; margin-bottom: 0;">
+        <span id="selectedBankText" style="color: #888;">Enter Bank Name</span>
+        <input type="hidden" id="receiverBank" required>
+        <span style="margin-left: auto; color: #555;">▼</span>
+      </div>
+      
+      <div class="bank-list-dropdown" id="bankListDropdown">
+        <div class="bank-search-box">
+          <input type="text" id="bankSearchInput" placeholder="Search bank..." onkeyup="filterBanks()">
+        </div>
+        <div class="bank-items" id="bankItemsList">
+          <div class="bank-item" onclick="selectBank('Easypaisa / Telenor Microfinance')"><span>Easypaisa (Telenor Microfinance)</span></div>
+          <div class="bank-item" onclick="selectBank('JazzCash / Mobilink Microfinance')"><span>JazzCash (Mobilink Microfinance)</span></div>
+          <div class="bank-item" onclick="selectBank('SadaPay')"><span>SadaPay</span></div>
+          <div class="bank-item" onclick="selectBank('NayaPay')"><span>NayaPay</span></div>
+          <div class="bank-item" onclick="selectBank('HBL - Habib Bank Limited')"><span>Habib Bank Limited (HBL)</span></div>
+          <div class="bank-item" onclick="selectBank('Meezan Bank')"><span>Meezan Bank</span></div>
+          <div class="bank-item" onclick="selectBank('UBL - United Bank Limited')"><span>United Bank Limited (UBL)</span></div>
+          <div class="bank-item" onclick="selectBank('MCB Bank')"><span>MCB Bank</span></div>
+          <div class="bank-item" onclick="selectBank('Allied Bank (ABL)')"><span>Allied Bank (ABL)</span></div>
+          <div class="bank-item" onclick="selectBank('Bank Alfalah')"><span>Bank Alfalah</span></div>
+          <div class="bank-item" onclick="selectBank('Faysal Bank')"><span>Faysal Bank</span></div>
+          <div class="bank-item" onclick="selectBank('Askari Bank')"><span>Askari Bank</span></div>
+          <div class="bank-item" onclick="selectBank('Bank Islami')"><span>BankIslami Pakistan</span></div>
+          <div class="bank-item" onclick="selectBank('National Bank of Pakistan (NBP)')"><span>National Bank of Pakistan (NBP)</span></div>
+          <div class="bank-item" onclick="selectBank('The Bank of Punjab (BOP)')"><span>The Bank of Punjab (BOP)</span></div>
+          <div class="bank-item" onclick="selectBank('NRSP Microfinance Bank')"><span>NRSP Microfinance Bank</span></div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="next-form-btn" style="margin-top: 20px;">Next</button>
+  </form>
+</div>
+
+<script>
+  function goToAmountPage(e) {
+    e.preventDefault();
+    const name = document.getElementById('receiverName').value;
+    const account = document.getElementById('receiverAccount').value;
+    const bank = document.getElementById('receiverBank').value;
+
+    if(!bank) {
+      alert('Please select a bank');
+      return;
+    }
+
+    localStorage.setItem('recName', name);
+    localStorage.setItem('recAccount', account);
+    localStorage.setItem('recBank', bank);
+
+    window.location.href = 'amount.html';
+  }
+
+  function toggleBankDropdown() {
+    const dropdown = document.getElementById('bankListDropdown');
+    dropdown.classList.toggle('show');
+  }
+
+  function selectBank(bankName) {
+    const textSpan = document.getElementById('selectedBankText');
+    textSpan.innerText = bankName;
+    textSpan.style.color = '#000';
+    document.getElementById('receiverBank').value = bankName;
+    document.getElementById('bankListDropdown').classList.remove('show');
+  }
+
+  function filterBanks() {
+    const input = document.getElementById('bankSearchInput').value.toLowerCase();
+    const items = document.getElementById('bankItemsList').getElementsByClassName('bank-item');
+    
+    for (let i = 0; i < items.length; i++) {
+      const text = items[i].innerText.toLowerCase();
+      if (text.includes(input)) {
+        items[i].style.display = "flex";
+      } else {
+        items[i].style.display = "none";
+      }
+    }
+  }
+
+  window.onclick = function(event) {
+    if (!event.target.closest('.bank-dropdown-container')) {
+      document.getElementById('bankListDropdown').classList.remove('show');
+    }
+  }
+</script>
+
+</body>
+</html>
