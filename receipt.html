@@ -287,21 +287,45 @@
   document.getElementById('amountDisplay1').innerText = savedAmount;
   document.getElementById('amountDisplay2').innerText = savedAmount;
 
-  // 1. Share Functionality
-  document.getElementById('shareBtn').addEventListener('click', async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Transaction Successful',
-          text: `Here is your transaction receipt of ${savedAmount} sent to ${localStorage.getItem('recName') || 'Receiver'}.`,
-          url: window.location.href
-        });
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-      }
-    } else {
-      alert('Sharing is not supported on this browser. You can download the receipt instead.');
-    }
+  // 1. Share Functionality (Ab WhatsApp par direct image file share hogi)
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    const receiptElement = document.getElementById('receiptCard');
+    
+    html2canvas(receiptElement, {
+      scale: 2, 
+      useCORS: true,
+      backgroundColor: null
+    }).then(canvas => {
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert('Image generation failed.');
+          return;
+        }
+        
+        const file = new File([blob], 'transaction-receipt.png', { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: 'Transaction Receipt',
+              text: `Transaction Receipt of ${savedAmount}`,
+              files: [file]
+            });
+          } catch (err) {
+            console.log('Share canceled or failed', err);
+          }
+        } else {
+          const link = document.createElement('a');
+          link.download = 'transaction-receipt.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          alert('Image downloaded successfully (Direct file sharing not supported on this browser).');
+        }
+      }, 'image/png');
+    }).catch(err => {
+      console.error('Canvas error:', err);
+      alert('Could not share image. Please try again.');
+    });
   });
 
   // 2. Download Functionality using html2canvas
