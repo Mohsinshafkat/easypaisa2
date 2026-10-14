@@ -7,7 +7,7 @@
   "theme_color": "#128c44",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "eplogo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
