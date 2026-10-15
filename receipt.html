@@ -291,32 +291,36 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
+let authTimeout = setTimeout(() => {
+    if (!auth.currentUser) {
       window.location.href = 'index.html';
-      return;
     }
-    
-    let deviceId = localStorage.getItem('device_token');
-    if (!deviceId) {
-      deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
-      localStorage.setItem('device_token', deviceId);
-    }
+  }, 2000);
 
-    try {
-      const docRef = db.collection('devices').doc(user.uid);
-      const doc = await docRef.get();
-      if (!doc.exists) {
-        await docRef.set({ deviceId: deviceId });
-      } else {
-        if (doc.data().deviceId !== deviceId) {
-          alert('Unauthorized device! Account sharing is restricted.');
-          auth.signOut();
-          window.location.href = 'index.html';
-        }
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      clearTimeout(authTimeout);
+      let deviceId = localStorage.getItem('device_token');
+      if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+        localStorage.setItem('device_token', deviceId);
       }
-    } catch (e) {
-      console.error('Security check error', e);
+
+      try {
+        const docRef = db.collection('devices').doc(user.uid);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          await docRef.set({ deviceId: deviceId });
+        } else {
+          if (doc.data().deviceId !== deviceId) {
+            alert('Unauthorized device! Account sharing is restricted.');
+            auth.signOut();
+            window.location.href = 'index.html';
+          }
+        }
+      } catch (e) {
+        console.error('Security check error', e);
+      }
     }
   });
   // localStorage se data load karke receipt par set karna
