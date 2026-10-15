@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
  <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -312,6 +315,43 @@
 </div>
 
 <script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "easypaisa-ss",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Index page par check ke user logged in hai ya nahi
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      let deviceId = localStorage.getItem('device_token');
+      if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+        localStorage.setItem('device_token', deviceId);
+      }
+
+      try {
+        const docRef = db.collection('devices').doc(user.uid);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          await docRef.set({ deviceId: deviceId });
+        } else {
+          if (doc.data().deviceId !== deviceId) {
+            alert('Unauthorized device! Account sharing is restricted.');
+            auth.signOut();
+          }
+        }
+      } catch (e) {
+        console.error('Security check error', e);
+      }
+    }
+  });
   function goToAmountPage(e) {
     e.preventDefault();
     const name = document.getElementById('receiverName').value;
