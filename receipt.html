@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Transaction Successful</title>
@@ -276,6 +279,46 @@
 </main>
 
 <script>
+   const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "easypaisa-ss",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    let deviceId = localStorage.getItem('device_token');
+    if (!deviceId) {
+      deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem('device_token', deviceId);
+    }
+
+    try {
+      const docRef = db.collection('devices').doc(user.uid);
+      const doc = await docRef.get();
+      if (!doc.exists) {
+        await docRef.set({ deviceId: deviceId });
+      } else {
+        if (doc.data().deviceId !== deviceId) {
+          alert('Unauthorized device! Account sharing is restricted.');
+          auth.signOut();
+          window.location.href = 'index.html';
+        }
+      }
+    } catch (e) {
+      console.error('Security check error', e);
+    }
+  });
   // localStorage se data load karke receipt par set karna
   document.getElementById('txIdDisplay').innerText = localStorage.getItem('txId') || '#57183949805';
   document.getElementById('txDateTimeDisplay').innerText = localStorage.getItem('txDateTime') || '11 October 2026, 5:23 PM';
