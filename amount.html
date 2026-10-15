@@ -200,6 +200,9 @@
 </div>
 
 <script>
+ document.querySelector('.amount-section').addEventListener('click', function() {
+document.getElementById('realInput').focus();
+});
    const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -247,7 +250,7 @@
     document.getElementById('realInput').focus();
   };
 
-  function handleTyping(input) {
+    function handleTyping(input) {
     let value = input.value.replace(/[^0-9]/g, '');
     const amountText = document.getElementById('amountText');
     const btn = document.getElementById('nextBtn');
