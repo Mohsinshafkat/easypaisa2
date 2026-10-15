@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Enter Amount</title>
@@ -197,6 +200,46 @@
 </div>
 
 <script>
+   const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "easypaisa-ss",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    let deviceId = localStorage.getItem('device_token');
+    if (!deviceId) {
+      deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem('device_token', deviceId);
+    }
+
+    try {
+      const docRef = db.collection('devices').doc(user.uid);
+      const doc = await docRef.get();
+      if (!doc.exists) {
+        await docRef.set({ deviceId: deviceId });
+      } else {
+        if (doc.data().deviceId !== deviceId) {
+          alert('Unauthorized device! Account sharing is restricted.');
+          auth.signOut();
+          window.location.href = 'index.html';
+        }
+      }
+    } catch (e) {
+      console.error('Security check error', e);
+    }
+  });
   const receiverName = localStorage.getItem('recName') || 'Receiver Name';
   document.getElementById('payToText').innerText = 'Pay To: ' + receiverName;
 
@@ -250,58 +293,5 @@
     window.location.href = 'receipt.html';
   }
 </script>
-  const receiverName = localStorage.getItem('recName') || '';
-  document.getElementById('payToText').innerText = 'Pay To: ' + receiverName;
-
-  window.onload = function() {
-    document.getElementById('realInput').focus();
-  };
-
-  function handleTyping(input) {
-    let value = input.value.replace(/[^0-9]/g, '');
-    const amountText = document.getElementById('amountText');
-    const btn = document.getElementById('nextBtn');
-    
-    if (value) {
-      let formatted = Number(value).toLocaleString('en-US');
-      amountText.innerText = formatted;
-      amountText.classList.remove('placeholder');
-      btn.classList.add('active');
-    } else {
-      amountText.innerText = '0';
-      amountText.classList.add('placeholder');
-      btn.classList.remove('active');
-    }
-  }
-
-  function generateReceipt() {
-    const rawValue = document.getElementById('realInput').value.replace(/[^0-9]/g, '');
-    const amount = Number(rawValue);
-
-    if(!amount || amount <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    const randomTxId = '#' + Math.floor(10000000000 + Math.random() * 90000000000);
-    
-    const now = new Date();
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    const dateStr = now.toLocaleDateString('en-GB', options);
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    const timeStr = `${hours}:${minutes} ${ampm}`;
-    const dateTimeFinal = `${dateStr}, ${timeStr}`;
-
-    localStorage.setItem('txId', randomTxId);
-    localStorage.setItem('txDateTime', dateTimeFinal);
-    localStorage.setItem('txAmount', 'Rs. ' + amount.toLocaleString('en-US', {minimumFractionDigits: 2}));
-
-    window.location.href = 'receipt.html';
-  }
-</script>
-
 </body>
 </html>
